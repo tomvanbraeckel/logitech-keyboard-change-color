@@ -1,6 +1,6 @@
 // Userspace USB driver for changing the Logitech G110 keyboard backlight color
 // Copyleft 2011, Tom Van Braeckel <tomvanbraeckel@gmail.com>
-// Licensed under GPLv3
+// Licensed under GPLv2
 
 #include <stdio.h>
 #include <usb.h>
