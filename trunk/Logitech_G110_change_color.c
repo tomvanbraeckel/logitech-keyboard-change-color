@@ -1,5 +1,6 @@
 // Userspace USB driver for changing the Logitech G110 keyboard backlight color
 // Copyleft 2011, Tom Van Braeckel <tomvanbraeckel@gmail.com>
+// Credits: Tom Van Braeckel, Rich Budman
 // Licensed under GPLv2
 
 #include <stdio.h>
@@ -17,10 +18,11 @@
 // microseconds to wait between changing the color a little bit
 #define FADESPEED 100000 	// µs
 
+// this is the most important function, called by various functions below
 static int change_color(usb_dev_handle *handle, char* buffer) {
 	int written = usb_control_msg(handle, CONTROLFLAGS, 0x00000009, 0x00000307, 0x00000000, buffer, 0x00000005, 5000);
 	if (written != 5) {
-		fprintf(stderr, "Setting color failed, error code %d\n", written);
+		fprintf(stderr, "Setting color failed, error code %d\nThis happens sporadically on some machines.\n", written);
 	}
 	return written;
 }
@@ -95,12 +97,19 @@ int main (int argc,char **argv) {
 			fprintf(stderr, "Could not set configuration (errnr %d)!\n", setConfigResult);
 		  }
 
-		unsigned char prefix [] = {0x07, 0x00, 0x00, 0x00, 0xff};
-		//strobe(handle, prefix);
-
-		// loop
-		unsigned char prefix1 [] = {0x07, 0x00, 0x00, 0x00, 0xff};
-		loop_through_colors(handle, prefix1);
+		// set single color if an argument was given, otherwise loop through colors
+                unsigned char prefix [] = {0x07, 0x00, 0x00, 0x00, 0xff};
+		if ( argc > 1 ) {
+                     int i = atoi( argv[1] );
+                     if ( i < 0 || i > 255 ) {
+                         printf("Error: invalid color range (0-255)\n");
+                     } else {  
+                         prefix[1] = atoi( argv[1] );
+                         change_color(handle, (char*)prefix);
+                     }
+                 } else {
+                     loop_through_colors(handle, (char*)prefix);
+                 }
 
 		if (usb_close(handle) < 0) {
 		  fprintf(stderr, "Could not close usb device!\n");
